@@ -3,13 +3,7 @@ const ctx = canvas.getContext('2d');
 const keys = {};
 const objects = [];
 const waterProjectiles = [];
-const gravity = 0.4; // Gravity force
 const platforms = []; // Array to hold platforms
-const fires = []; //array to hold fires
-var offset = 0; //tracks objects offset
-//const fireCrackles = new Audio("./fireCrackle.mp3");
-
-//const pouringWater = new Audio("./pouringWater.mp3");
 const infoText = document.getElementById("infoText");
 const deleteFromArray = function (target, array) {
     returnArray = [];
@@ -20,64 +14,22 @@ const deleteFromArray = function (target, array) {
     }
     return returnArray;
 } // Function to delete an element from an array, used for waterBall elements
-const LightningElement = {
-    enabled: true,
-    cooldown: 1000, // cooldown in ms
-    ability: function (key) {
-        if (!this.enabled) { return }; // Check if the ability is on cooldown
-        if (key === 'ArrowRight') {
-            Player.x += 100; // Blink right
-            this.timerStart();
-        }
-        if (key === 'ArrowLeft') {
-            Player.x -= 100; // Blink left
-            this.timerStart();
-        }
-        if (key === 'ArrowUp') {
-            Player.y -= 100; // Blink up
-            this.timerStart();
-        }
-        if (key === "ArrowDown") {
-            Player.y += 100; // Blink down
-            
-            this.timerStart();
-        }
-    },
-    timerStart: function () {
-        this.enabled = false;
-        setTimeout(() => {
-            this.enabled = true;
-        }, this.cooldown); // 5 seconds cooldown
-    }
 
-}
-const WaterElement = {
-    ability: function (key) {
-        if (key === 'ArrowRight') {
-            Player.direction = "right";
-            const water = new Water(Player.x, Player.y, Player.direction);
-            waterProjectiles.push(water);
-        }
-        if (key === 'ArrowLeft') {
-            Player.direction = "left";
-            const water = new Water(Player.x, Player.y, Player.direction);
-            waterProjectiles.push(water);
-        }
-        if (key === 'ArrowUp') {
-            // Player.direction = "up";
-            Player.direction = "up";
-            const water = new Water(Player.x, Player.y, Player.direction);
-            waterProjectiles.push(water);
-        }
-        if (key === "ArrowDown") {
-            Player.direction = "down";
-            const water = new Water(Player.x, Player.y, Player.direction);
-            waterProjectiles.push(water);
-        }
+class Player {
+    constructor (x, y){
+        this.x=x;
+        this.y=y;
+        this.speed = 5;
+        lives = 5;
+        direction = "up";
+        damageable = true;
+
+    }
+    die(){
+        
     }
 }
 
-const elements = [WaterElement, LightningElement];
 const Player = {
     x: 40,
     y: 20,
