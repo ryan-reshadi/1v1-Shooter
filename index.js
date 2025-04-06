@@ -3,7 +3,6 @@ const ctx = canvas.getContext('2d');
 const keys = {};
 const objects = [];
 const waterProjectiles = [];
-const platforms = []; // Array to hold platforms
 const infoText = document.getElementById("infoText");
 const deleteFromArray = function (target, array) {
     returnArray = [];
@@ -16,130 +15,56 @@ const deleteFromArray = function (target, array) {
 } // Function to delete an element from an array, used for waterBall elements
 
 class Player {
-    constructor (x, y){
-        this.x=x;
-        this.y=y;
+    constructor(x, y, color) {
+        this.x = x;
+        this.spawnX = x;
+        this.spawnY = y;
+        this.y = y;
         this.speed = 5;
-        lives = 5;
-        direction = "up";
-        damageable = true;
+        this.lives = 5;
+        this.direction = "up";
+        this.damageable = true;
+        this.color = color;
+        this.size = 50;
+    }
+    die() {
 
     }
-    die(){
-        
-    }
-}
-
-const Player = {
-    x: 40,
-    y: 20,
-    size: 20,
-    speed: 5,
-    velocityY: 0, // Vertical velocity
-    score: 0,
-    onGround: false,
-    direction: "up",
-    damageable: true,
-    deaths: 0,
-    elementIndex: 0,
-    die: function () {
-        for (i of objects) {
-            i.x += offset;
-        }
-        offset = 0;
-        Player.x = 40;
-        Player.y = 20;
-        Player.velocityY = 0;
-        Player.deaths = Player.deaths + 1;
-
-    },
-    move: function (dx) {
-        this.x += dx;
-    },
-    update: function (fire) {
-        if (!this.onGround) {
-            this.velocityY += gravity; // Apply gravity
-        }
-        this.y += this.velocityY;
-
-        // Check collisions with platforms
-        this.onGround = false;
-        for (const platform of platforms) {
-            const isAbovePlatform = this.y + this.size <= platform.y;
-            const isBelowPlatform = this.y >= platform.y + platform.length;
-            const isLeftOfPlatform = this.x + this.size <= platform.x;
-            const isRightOfPlatform = this.x >= platform.x + platform.width;
-
-            // Check if hitting the platform from above
-            if (
-                !isBelowPlatform &&
-                !isLeftOfPlatform &&
-                !isRightOfPlatform &&
-                this.velocityY >= 0 && // Ensure the player is moving downward or stationary
-                this.y + this.size > platform.y && // Ensure the player is overlapping the platform
-                this.y < platform.y // Ensure the player is above the platform
-            ) {
-                this.y = platform.y - this.size; // Place player on top of the platform
-                this.velocityY = 0; // Stop falling
-                this.onGround = true;
-                break;
-            }
-
-            // Check if hitting the platform from below
-            if (
-                !isAbovePlatform &&
-                !isLeftOfPlatform &&
-                !isRightOfPlatform &&
-                this.velocityY < 0 && // Ensure the player is moving upward
-                this.y + this.size > platform.y && // Ensure the player is overlapping the platform
-                this.y <= platform.y + platform.length // Ensure the player is below the platform
-            ) {
-                this.y = platform.y + platform.length; // Push player below the platform
-                this.velocityY = 0; // Stop upward movement
-            }
-
-            // Check if hitting the platform from the left
-            if (
-                !isAbovePlatform &&
-                !isBelowPlatform &&
-                this.x + this.size > platform.x &&
-                this.x < platform.x
-            ) {
-                this.x = platform.x - this.size; // Push player to the left of the platform
-            }
-
-            // Check if hitting the platform from the right
-            if (
-                !isAbovePlatform &&
-                !isBelowPlatform &&
-                this.x < platform.x + platform.width &&
-                this.x + this.size > platform.x + platform.width
-            ) {
-                this.x = platform.x + platform.width; // Push player to the right of the platform
-            }
-        }
-    },
-    draw: function () {
-        ctx.fillStyle = 'red';
+    draw() {
+        ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.size, this.size);
-    },
-    jump: function () {
-        if (this.onGround) {
-            this.velocityY = -10;
+    }
+    move(dX, dY){
+        this.x += dX;
+        this.y += dY;
+    }
+    checkCollision(enemyProjectileList) {
+        for (let i = 0; i < enemyProjectileList.length; i++) {
+            if (this.x < enemyProjectileList[i].x + enemyProjectileList[i].size &&
+                this.x + this.size > enemyProjectileList[i].x &&
+                this.y < enemyProjectileList[i].y + enemyProjectileList[i].size &&
+                this.y + this.size > enemyProjectileList[i].y) {
+                return true;
+            }
+        }
+        return false;
+    }
+    update () {
+        if (this.x <= 0) {
+            this.x = canvas.width - this.size;
+
+        }
+        if (this.x >= canvas.width - this.size) {
+            this.x = 0;
+        }
+        if (this.y <= 0) {
+            this.y = canvas.height - this.size;
+        }
+        if (this.y >= canvas.height - this.size) {
+            this.y = 0;
         }
     }
-};
-
-
-function play() {
-    let audio = new Audio('playerDeath.mp3');
-    // audio.play().catch(error => console.error("Playback error:", error));
-};
-function jumpSound() {
-    let audio = new Audio('playerJump.mp3');
-    // audio.play().catch(error => console.error("Playback error:", error));
 }
-
 
 function Water(x, y, direction) {
     this.x = x;
@@ -183,62 +108,54 @@ function Water(x, y, direction) {
 
     }
 }
-function Fire(x, y) {
-    this.x = x;
-    this.y = y;
-    this.size = 30;
-    this.dead = false;
-    this.image = new Image();
-    this.image.src = 'fire.webp';
-    this.draw = function () {
-        ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
-    },
-        this.die = function () {
-            this.x = canvas.width + 20;
-            this.y = -20;
-            this.dead = true;
-            play();
-        }
-    this.playerCollide = function (player) {
-        if (
-            this.x < player.x + player.size &&
-            this.x + this.size > player.x &&
-            this.y + this.size > player.y &&
-            this.y + this.size <= player.y + player.size
-        ) {
-            return true;
-        }
-    }
-    this.waterCollide = function (water) {
-        if (
-            this.x < water.x + water.size &&
-            this.x + this.size > water.x &&
-            this.y + this.size > water.y &&
-            this.y + this.size <= water.y + water.size
-        ) {
-            this.die();
-            water.collide();
-        }
-    }
-}
+// function Fire(x, y) {
+//     this.x = x;
+//     this.y = y;
+//     this.size = 30;
+//     this.dead = false;
+//     this.image = new Image();
+//     this.image.src = 'fire.webp';
+//     this.draw = function () {
+//         ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
+//     },
+//         this.die = function () {
+//             this.x = canvas.width + 20;
+//             this.y = -20;
+//             this.dead = true;
+//             play();
+//         }
+//     this.playerCollide = function (player) {
+//         if (
+//             this.x < player.x + player.size &&
+//             this.x + this.size > player.x &&
+//             this.y + this.size > player.y &&
+//             this.y + this.size <= player.y + player.size
+//         ) {
+//             return true;
+//         }
+//     }
+//     this.waterCollide = function (water) {
+//         if (
+//             this.x < water.x + water.size &&
+//             this.x + this.size > water.x &&
+//             this.y + this.size > water.y &&
+//             this.y + this.size <= water.y + water.size
+//         ) {
+//             this.die();
+//             water.collide();
+//         }
+//     }
+// }
 
-function Platform(x, y, width, length, color) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.length = length;
-    this.color = color;
-    this.draw = function () {
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y, this.width, this.length);
-    };
-}
-objects.push(Player);
-
-const height = 20
-const brown = '#964B00'; // Brown color for platforms
 const BGImage = new Image(1400, 850);
-BGImage.src = 'forest.webp';
+var imgSrc = "";
+var player1 = new Player(100, 100, 'blue');
+var player2 = new Player(600, 100, 'red');
+
+
+// const height = 20
+const brown = '#964B00'; // Brown color for platforms
+
 
 
 // Ensure the title screen is displayed on page load
@@ -248,62 +165,56 @@ window.onload = function () {
     infoText.style.display = 'none';
 };
 
+
 function gameLoop() {
     ctx.clearRect(0, 0, 0, canvas.width, canvas.height);
-
-    // Draw background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Semi-transparent black for the background
     ctx.drawImage(BGImage, 0, 0, 1400, 850);
+    // ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Handle player movement
     if (keys['a']) {
-        Player.move(-Player.speed);
+        player1.move(-player1.speed, 0);
+        player1.direction = "left";
     }
     if (keys['d']) {
-        Player.move(Player.speed);
+        player1.move(player1.speed, 0);
+        player1.direction = "right";
     }
     if (keys['w']) {
-        Player.jump();
-        jumpSound();
+        player1.move(0, -player1.speed);
+        player1.direction = "up";
     }
-
+    if (keys['s']){
+        player1.move(0, player1.speed);
+        player1.direction = "down";
+    }
+    if (keys['ArrowLeft']) {
+        player2.move(-player2.speed, 0);
+        player2.direction = "left";
+    }
+    if (keys['ArrowRight']) {
+        player2.move(player2.speed, 0);
+        player2.direction = "right";
+    }
+    if (keys['ArrowUp']) {
+        player2.move(0, -player2.speed);
+        player2.direction = "up";
+    }
+    if (keys['ArrowDown']) {
+        player2.move(0, player2.speed);
+        player2.direction = "down";
+    }
     // Update and draw player
-    Player.update();
-    Player.draw();
+    player1.update();
+    player1.draw();
+    player2.update();
+    player2.draw();
 
-    infoText.innerText = "Score: " + Player.score + "/" + targetScore + " Deaths: " + Player.deaths + ", A - Move left, D - Move right, W - Jump, Space - Switch Element, Arrow Keys - Use Element Ability";
-
-    if (Player.y >= canvas.getAttribute("height")) {
-        Player.die();
-    }
-
-    // Draw platforms
-    for (const platform of platforms) {
-        platform.draw();
-    }
+    infoText.innerText = "";
 
     // Draw fires and check collisions
-    for (var fire of fires) {
-        if (!fire.dead) {
-            fire.draw();
-        }
-        if (fire.playerCollide(Player) && Player.damageable) {
-            Player.die();
-        }
-    }
-    if (Player.x >= canvas.getAttribute("width")) {
-
-        offset += Player.speed;
-        for (const object of objects) {
-            object.x -= Player.speed;
-        }
-    }
-    if (Player.x <= 0) {
-
-        offset -= Player.speed;
-        for (const object of objects) {
-            object.x += Player.speed;
-        }
-    }
+    
     // Handle water projectiles
     for (const water of waterProjectiles) {
         if (this.y < 0 || this.y > canvas.getAttribute("height") || this.x < 0 || this.x > canvas.getAttribute("width")) {
@@ -313,53 +224,30 @@ function gameLoop() {
         else {
             water.draw();
             water.tick();
-            for (const fire of fires) {
-                if (water.collide(fire)) {
-                    water.die();
-                    deleteFromArray(water, waterProjectiles);
-                    Player.score += 1;
-                    fire.die();
-                    deleteFromArray(fire, fires);
-                }
-            }
-            for (const platform of platforms) {
-                if (water.collide(platform)) {
-                    water.die();
-                    deleteFromArray(water, waterProjectiles);
-                }
-            }
         }
     }
-    if (Player.score >= targetScore) {
-        ctx.fillStyle = '#88E788';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'black';
-        ctx.font = "50px Arial";
-        ctx.fillText("You win!", canvas.width / 2 - 200, canvas.height / 2);
-        ctx.fillText("Press F5 to play again", canvas.width / 2 - 200, canvas.height / 2 + 50);
-        ctx.fillText("Points: " + Player.score + "/" + targetScore + " Deaths: " + Player.deaths, canvas.width / 2 - 200, canvas.height / 2 + 100);
-        ctx.font = "20px Arial";
-        ctx.fillText("These dangerous forest fires that you just put out occur all over the world, claiming lives and homes every time they happen.", canvas.width / 2 - 600, canvas.height / 2 + 150);
-        ctx.fillText("We need to push for more preventative measures for these catastrophies in order to eliminate or mitigate the damages from wildfires.", canvas.width / 2 - 600, canvas.height / 2 + 180);
-        ctx.fillText("Because gradual global warming and climate change is the primary cause of the increase in natural wildfires as of late, that should be our main priority.", canvas.width / 2 - 650, canvas.height / 2 + 210);
-        ctx.fillText("Combatting global warming will not be easy, but we must work together to prevent this impending doom that is knocking on our door.", canvas.width / 2 - 600, canvas.height / 2 + 240);
+    // if (Player.score >= targetScore) {
+    //     ctx.fillStyle = '#88E788';
+    //     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    //     ctx.fillStyle = 'black';
+    //     ctx.font = "50px Arial";
+    //     ctx.fillText("You win!", canvas.width / 2 - 200, canvas.height / 2);
+    //     ctx.fillText("Press F5 to play again", canvas.width / 2 - 200, canvas.height / 2 + 50);
+    //     ctx.fillText("Points: " + Player.score + "/" + targetScore + " Deaths: " + Player.deaths, canvas.width / 2 - 200, canvas.height / 2 + 100);
+    //     ctx.font = "20px Arial";
+    //     ctx.fillText("These dangerous forest fires that you just put out occur all over the world, claiming lives and homes every time they happen.", canvas.width / 2 - 600, canvas.height / 2 + 150);
+    //     ctx.fillText("We need to push for more preventative measures for these catastrophies in order to eliminate or mitigate the damages from wildfires.", canvas.width / 2 - 600, canvas.height / 2 + 180);
+    //     ctx.fillText("Because gradual global warming and climate change is the primary cause of the increase in natural wildfires as of late, that should be our main priority.", canvas.width / 2 - 650, canvas.height / 2 + 210);
+    //     ctx.fillText("Combatting global warming will not be easy, but we must work together to prevent this impending doom that is knocking on our door.", canvas.width / 2 - 600, canvas.height / 2 + 240);
 
-    }
+    // }
     requestAnimationFrame(gameLoop);
 }
 
 // Handle keyboard input
 document.addEventListener('keydown', (event) => {
     keys[event.key] = true;
-    elements[Player.elementIndex].ability(event.key);
     if (event.key === ' ') {
-        Player.elementIndex += 1;
-        if (Player.elementIndex >= elements.length) {
-            Player.elementIndex = 0;
-        }
-    }
-    if (elements[Player.elementIndex] === LightningElement) {
-
     }
 });
 
@@ -379,75 +267,19 @@ function startLevel(level) {
     infoText.style.display = 'block';
 
     // Clear existing platforms and fires
-    platforms.length = 0;
-    fires.length = 0;
 
     // Load level-specific platforms and fires
     if (level === 1) {
-        platforms.push(new Platform(50, 200, 200, height, brown));
-        platforms.push(new Platform(250, 400, 75, height, brown));
-        platforms.push(new Platform(225, 100, 20, 75, brown));
-        fires.push(new Fire(100, 150));
-        fires.push(new Fire(200, 300));
+        imgSrc = "marsBG.webp";
     } else if (level === 2) {
-        platforms.push(new Platform(100, 300, 150, height, brown));
-        platforms.push(new Platform(400, 500, 100, height, brown));
-        platforms.push(new Platform(700, 400, 200, height, brown));
-        fires.push(new Fire(150, 250));
-        fires.push(new Fire(450, 450));
-        fires.push(new Fire(750, 350));
+        imgSrc = "spaceBG.webp";
     } else if (level === 3) {
-        platforms.push(new Platform(50, 600, 300, height, brown));
-        platforms.push(new Platform(400, 500, 150, height, brown));
-        platforms.push(new Platform(700, 300, 100, height, brown));
-        fires.push(new Fire(60, 550));
-        fires.push(new Fire(450, 450));
-        fires.push(new Fire(750, 250));
-        fires.push(new Fire(800, 200));
+        imgSrc = "forest.webp";
     }
     else if (level === 4) {
-        platforms.push(new Platform(50, 200, 200, height, brown));
-        platforms.push(new Platform(250, 400, 75, height, brown));
-        platforms.push(new Platform(450, 400, 75, height, brown));
-        platforms.push(new Platform(650, 320, 20, height * 5, brown)); // tall wall
-        platforms.push(new Platform(620, 450, 20, height, brown)); // small platform
-        platforms.push(new Platform(480, 500, 80, height, brown));
-        // Jump over wall
-        platforms.push(new Platform(300, 670, 100, height, brown));
-        platforms.push(new Platform(490, 630, 20, height * 2.5, brown));
-        platforms.push(new Platform(600, 670, 70, height, brown));
-
-        platforms.push(new Platform(800, 670, 70, height, brown));
-        // Elevator
-        platforms.push(new Platform(1070, 670, 150, height, brown));
-
-        for (let i = 90; i <= 90 * 4; i = i + 90) {
-            platforms.push(new Platform(1100, 670 - i, 110, height, brown));
-        }
-
-        // Create fires
-        fires.push(new Fire(100, 150));
-        fires.push(new Fire(200, 300));
-        fires.push(new Fire(700, 200));
-        fires.push(new Fire(750, 200));
-        fires.push(new Fire(1000, 200));
-        fires.push(new Fire(1100, 100));
-        fires.push(new Fire(1300, 200));
-        fires.push(new Fire(300, 450));
-        fires.push(new Fire(800, 450));
-        fires.push(new Fire(1000, 475));
-        fires.push(new Fire(500, 550));
-        fires.push(new Fire(600, 600));
+        imgSrc = "spaceBG.webp";
     }
-    for (i of fires) {
-        objects.push(i);
-    }
-    for (i of platforms) {
-        objects.push(i);
-    }
-    // Update target score to match the number of fires
-    targetScore = fires.length; // Dynamically set targetScore here
-
+    BGImage.src = imgSrc;
     // Start the game loop
     gameLoop();
 }
