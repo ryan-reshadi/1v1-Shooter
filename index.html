@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVHacks 2025 Project</title>
+    <title>1v1 Cool</title>
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
     <div id="titleScreen">
-        <h1>Platformer Reborn</h1>
-        <p>Select a Level:</p>
+        <h1>1v1 Cool</h1>
+        <p>Select a Map:</p>
         <button onclick="startLevel(1)">Level 1</button>
         <button onclick="startLevel(2)">Level 2</button>
         <button onclick="startLevel(3)">Level 3</button>
         <button onclick="startLevel(4)">Level 4</button>
     </div>
-    <canvas id="myCanvas" width="1400" height="750" style="border:1px solid black; display: none;">
+    <p id = "lives"></p>
+    <canvas id="myCanvas" width="1400" height="600" style="border:1px solid black; display: none;">
     </canvas>
     <main>
     </main> 
     <footer>
-        <p id="infoText" style="display: none;">Score: , A - Move left, D - Move right, W - Jump, Arrow Keys - use abilities </p>
+        <p id="infoText" style="display: none;"></p>
         <p id="controlText2"></p>
     </footer>
     <script src="index.js"></script>

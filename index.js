@@ -2,16 +2,13 @@ const canvas = document.getElementById('myCanvas');
 const ctx = canvas.getContext('2d');
 const keys = {};
 const objects = [];
-const waterProjectiles = [];
+const allBullets = [];
 const infoText = document.getElementById("infoText");
 const deleteFromArray = function (target, array) {
-    returnArray = [];
-    for (i of array) {
-        if (i !== target) {
-            returnArray.push(i);
-        }
+    const index = array.indexOf(target);
+    if (index > -1) {
+        array.splice(index, 1); // Remove the element from the array
     }
-    return returnArray;
 } // Function to delete an element from an array, used for waterBall elements
 
 class Player {
@@ -25,7 +22,7 @@ class Player {
         this.direction = "up";
         this.damageable = true;
         this.color = color;
-        this.size = 50;
+        this.size = 30;
     }
     die() {
 
@@ -34,7 +31,7 @@ class Player {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.size, this.size);
     }
-    move(dX, dY){
+    move(dX, dY) {
         this.x += dX;
         this.y += dY;
     }
@@ -49,7 +46,7 @@ class Player {
         }
         return false;
     }
-    update () {
+    update() {
         if (this.x <= 0) {
             this.x = canvas.width - this.size;
 
@@ -65,34 +62,51 @@ class Player {
         }
     }
 }
-
-function Water(x, y, direction) {
-    this.x = x;
-    this.y = y;
-    this.speed = 15;
-    this.size = 15;
-    this.direction = direction;
-    this.image = new Image();
-    this.image.src = 'waterBall.webp';
-    this.draw = function () {
-        ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
+class Bullet {
+    constructor(x, y, direction, target, memberArray) {
+        this.x = x;
+        this.y = y;
+        this.target = target;
+        this.memberArray = memberArray;
+        this.speed = 15;
+        this.size = 10;
+        this.direction = direction;
+        // this.image = new Image();
+        // this.image.src = 'waterBall.webp';
     }
-    this.collide = function (object) {
-        if (
-            this.x < object.x + object.size &&
-            this.x + this.size > object.x &&
-            this.y + this.size > object.y &&
-            this.y + this.size <= object.y + object.size
-        ) {
 
+    draw() {
+        // ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); // Circle with center (100, 100) and radius 50
+        if (this.target == player1) {
+            ctx.fillStyle = 'blue';
+        }
+        else {
+            ctx.fillStyle = 'red';
+        }
+        ctx.fill();
+        ctx.closePath();
+    }
+    collide() {
+        if (
+            this.x < this.target.x + this.target.size &&
+            this.x + this.size > this.target.x &&
+            this.y + this.size > this.target.y &&
+            this.y + this.size <= this.target.y + this.target.size
+        ) {
             return true;
         }
-    },
-        this.die = function () {
-            this.y = -60;
-            this.speed = 0;
+        else {
+            return false;
         }
-    this.tick = function () {
+    }
+    die() {
+        this.y = -60;
+        this.speed = 0;
+        deleteFromArray(this, this.memberArray);
+    }
+    tick() {
         if (this.direction === "left") {
             this.x = this.x - this.speed;
         }
@@ -105,9 +119,13 @@ function Water(x, y, direction) {
         if (this.direction === "down") {
             this.y = this.y + this.speed;
         }
-
+        if (this.collide()) {
+            this.target.lives -= 1;
+            this.die()
+        }
     }
 }
+
 // function Fire(x, y) {
 //     this.x = x;
 //     this.y = y;
@@ -185,7 +203,7 @@ function gameLoop() {
         player1.move(0, -player1.speed);
         player1.direction = "up";
     }
-    if (keys['s']){
+    if (keys['s']) {
         player1.move(0, player1.speed);
         player1.direction = "down";
     }
@@ -214,16 +232,15 @@ function gameLoop() {
     infoText.innerText = "";
 
     // Draw fires and check collisions
-    
+
     // Handle water projectiles
-    for (const water of waterProjectiles) {
+    for (const bullet of allBullets) {
         if (this.y < 0 || this.y > canvas.getAttribute("height") || this.x < 0 || this.x > canvas.getAttribute("width")) {
             this.die();
-            deleteFromArray(water, waterProjectiles);
         }
         else {
-            water.draw();
-            water.tick();
+            bullet.tick();
+            bullet.draw();
         }
     }
     // if (Player.score >= targetScore) {
@@ -234,7 +251,7 @@ function gameLoop() {
     //     ctx.fillText("You win!", canvas.width / 2 - 200, canvas.height / 2);
     //     ctx.fillText("Press F5 to play again", canvas.width / 2 - 200, canvas.height / 2 + 50);
     //     ctx.fillText("Points: " + Player.score + "/" + targetScore + " Deaths: " + Player.deaths, canvas.width / 2 - 200, canvas.height / 2 + 100);
-    //     ctx.font = "20px Arial";
+    //     ctx.font = "20px Aria";
     //     ctx.fillText("These dangerous forest fires that you just put out occur all over the world, claiming lives and homes every time they happen.", canvas.width / 2 - 600, canvas.height / 2 + 150);
     //     ctx.fillText("We need to push for more preventative measures for these catastrophies in order to eliminate or mitigate the damages from wildfires.", canvas.width / 2 - 600, canvas.height / 2 + 180);
     //     ctx.fillText("Because gradual global warming and climate change is the primary cause of the increase in natural wildfires as of late, that should be our main priority.", canvas.width / 2 - 650, canvas.height / 2 + 210);
@@ -248,13 +265,18 @@ function gameLoop() {
 document.addEventListener('keydown', (event) => {
     keys[event.key] = true;
     if (event.key === ' ') {
+        allBullets.push(new Bullet(player1.x + player1.size / 2, player1.y + player1.size / 2, player1.direction, player2, allBullets));
     }
 });
 
 document.addEventListener('keyup', (event) => {
     keys[event.key] = false;
 });
-
+document.addEventListener('mousedown', (event) => {
+    if (event.button === 0) { // 0 is the left mouse button
+        allBullets.push(new Bullet(player2.x + player2.size / 2, player2.y + player2.size / 2, player2.direction, player1, allBullets));
+    }
+});
 // Start the game loop
 BGImage.onload = function () {
     gameLoop();
