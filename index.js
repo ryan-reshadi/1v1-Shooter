@@ -9,7 +9,7 @@ const deleteFromArray = function (target, array) {
     if (index > -1) {
         array.splice(index, 1); // Remove the element from the array
     }
-} // Function to delete an element from an array, used for waterBall elements
+} // Function to delete an element from an array, used for bullets elements
 
 class Player {
     constructor(x, y, color) {
@@ -24,9 +24,9 @@ class Player {
         this.color = color;
         this.size = 30;
     }
-    die() {
+    // die() {
 
-    }
+    // }
     draw() {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.size, this.size);
@@ -121,6 +121,7 @@ class Bullet {
         }
         if (this.collide()) {
             this.target.lives -= 1;
+            console.log(this.target.lives);
             this.die()
         }
     }
@@ -187,6 +188,7 @@ window.onload = function () {
 function gameLoop() {
     ctx.clearRect(0, 0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Semi-transparent black for the background
+    ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.drawImage(BGImage, 0, 0, 1400, 850);
     // ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -258,6 +260,27 @@ function gameLoop() {
     //     ctx.fillText("Combatting global warming will not be easy, but we must work together to prevent this impending doom that is knocking on our door.", canvas.width / 2 - 600, canvas.height / 2 + 240);
 
     // }
+    
+    //determines color of info text, dev discretion based on color of bg
+    switch (level){
+        case 1:
+            ctx.fillStyle= "white";
+        case 2:
+            ctx.fillStyle = "black";
+    }
+    if (player1.lives<=0){
+        ctx.fillStyle = 'red';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'black';
+        ctx.font = "50px Arial";
+        ctx.fillText("Player 2 Wins!", canvas.width / 2 - 200, canvas.height / 2);
+        ctx.fillText("Press F5 to play again", canvas.width / 2 - 200, canvas.height / 2 + 50);
+        ctx.font = "20px Arial";
+        ctx.fillText("Score: " + 5-player2.lives +"-" + 5-player1.lives);
+    }
+    else if (player2.lives<=0){
+
+    }
     requestAnimationFrame(gameLoop);
 }
 
@@ -296,7 +319,7 @@ function startLevel(level) {
     } else if (level === 2) {
         imgSrc = "spaceBG.webp";
     } else if (level === 3) {
-        imgSrc = "forest.webp";
+        imgSrc = "marsBG.webp";
     }
     else if (level === 4) {
         imgSrc = "spaceBG.webp";
