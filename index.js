@@ -318,11 +318,6 @@ function startLevel(level) {
         imgSrc = "marsBG.webp";
     } else if (level === 2) {
         imgSrc = "spaceBG.webp";
-    } else if (level === 3) {
-        imgSrc = "marsBG.webp";
-    }
-    else if (level === 4) {
-        imgSrc = "spaceBG.webp";
     }
     BGImage.src = imgSrc;
     // Start the game loop
